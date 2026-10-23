@@ -48,6 +48,12 @@ Gelesen wird über `logseq.DB.datascriptQuery` mit `pull [*]`; dann hat jede Ent
 | I12 | `pull` auf gelöschte Entität | Liefert weiterhin `{"id": N}` statt nichts. Der Server wertet nur Entitäten mit `uuid` als vorhanden |
 | I13 | `deletePage` = Papierkorb | Im DB-Graphen löscht `deletePage` nicht: Die Seite bekommt `:logseq.property/deleted-at` und behält Tags, Properties, Kinder und Verweise; Datascript findet sie weiter, ihre Verweise zählen als Backlinks, ihr Titel bleibt belegt. Bemerkt beim ersten Schreibtest in ReqSeq. Der Server blendet Seiten im Papierkorb und Blöcke darauf in allen Listen aus; `get_node` per UUID zeigt sie mit `recycled: true`. Endgültig löschen geht nur in der Logseq-Oberfläche. `removeBlock` für Blöcke löscht dagegen wirklich |
 | I14 | Verweis-Filter | `find_objects` vergleicht Verweise mit UUID oder Titel des Ziels, nicht mit dessen `ID`-Property: „Derives from = N-007“ findet nichts, „= Abdeckung einer Auswahl von Requirements“ schon Seit 0.2.0 tragen Verweise die `id` ihres Ziels (`LOGSEQ_ID_PROPERTY`), und Filter und Eingaben nehmen sie an |
+| I15 | `addTagProperty` an `user.class` | Scheitert auch an Tags aus der Oberfläche („Not a valid tag“), ebenso `removeTagProperty` (`spike/nachprobe_ui_tag.py`) |
+| I16 | **Klassen-Properties direkt setzen** | **Geht:** `upsertBlockProperty(<Tag-UUID>, ":logseq.property.class/properties", [Property-IDs], {entityId: true})` hängt Properties an einen Tag, an `user.class` wie an API-Klassen. Es ergänzt nur; `removeBlockProperty(<Tag>, ":logseq.property.class/properties")` leert die Liste. Eine bestimmte Menge setzen heißt also: leeren, dann neu setzen. Das Schema des Servers sieht sie danach als Klassen-Properties |
+| I17 | **Erlaubte Klassen setzen** | **Geht:** `setPropertyNodeTags(<Property-UUID>, [Tag-Entitäts-IDs])` setzt `:logseq.property/classes` einer node-Property. Korrigiert I11, das nur `upsertNodes` betraf |
+| I18 | `upsertNodes` mit `edit` | Für Seiten, Tags und Properties nicht unterstützt („Editing a page, tag or property isn't supported yet“); nur `add` geht |
+| I19 | Vererbung an `user.class` | `addTagExtends` und `removeTagExtends` wirken auch an Tags aus der Oberfläche |
+| I20 | Property umbenennen | `renamePage(<Property-UUID>, <neuer Titel>)` benennt eine Property um; das Ident bleibt, Werte bleiben erhalten |
 | I9 | Plugin-Kennung | Alles, was über die HTTP-API angelegt wird, landet unter `_test_plugin`. **Annahme:** Die Kennung kommt vom HTTP-API-Server selbst; ändert Logseq sie, wechselt der Namespace neuer API-Properties |
 
 ## Was daraus im Server folgt
@@ -56,4 +62,4 @@ Gelesen wird über `logseq.DB.datascriptQuery` mit `pull [*]`; dann hat jede Ent
 - Jeder Schreibvorgang wird vorher vollständig geprüft, dann einzeln ausgeführt und danach über Datascript zurückgelesen (`verified`, `problems`). Schreibaufrufe werden nie wiederholt.
 - Blöcke einzeln mit `insertBlock` und eigener UUID einfügen (F6, I5); Properties und Tags danach setzen.
 - Mehrfachwerte ersetzen statt ergänzen: erst `removeBlockProperty`, dann setzen.
-- Schema-Änderungen bleiben in der Oberfläche (F10). Phase 3 (`create_property` über `upsertNodes`, `validate_objects`) ist nicht gebaut.
+- Schema über die API: Properties anlegen (`upsertNodes`, F2), umbenennen (I20), an Tags hängen (I16), erlaubte Klassen setzen (I17), Vererbung (I19), Auswahlwerte (F11). Nur Tags als `user.class` anlegen geht nicht (F10).

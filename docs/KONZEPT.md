@@ -234,7 +234,7 @@ logseq-db-mcp/
 
 Die Punkte des Spikes (`user.property` schreibbar, typisierte Werte, `insertBatchBlock`, Tags, `moveBlock`, Antwortzeiten) sind in Abschnitt 9 beantwortet. Offen bleiben:
 
-1. **Klassen aus der Oberfläche (`user.class`) über die API ändern.** Über die API lassen sich keine `user.class`-Tags anlegen (F10, Nachproben). Ungetestet ist, ob `addTagExtends` und `addBlockTag` an Tags aus der Oberfläche wirken und ob `addTagProperty` dort geht. An API-Klassen scheitert es mit jeder Schlüsselform. Für den Test einen Tag `Spike UI Tag` in SpikeTest anlegen. Bis dahin ändert der Server das Schema von ReqSeq nicht (API-BEFUNDE).
+1. ~~Klassen aus der Oberfläche (`user.class`) über die API ändern~~: geklärt (API-BEFUNDE I15 bis I20). Bis auf das Anlegen eines Tags lässt sich das ganze Schema über die API pflegen; die Schema-Tools dafür sind noch nicht gebaut.
 2. Dauer von `upsertNodes` auf größeren Graphen (Issues: 16 s bis 140 s; im Testgraphen 30 ms bis 50 ms). Betrifft nur `create_property`.
 3. ~~Leerer erster Block von `createPage`~~: erledigt, der Server entfernt ihn bei eigenen Seiten (API-BEFUNDE I4).
 4. **API-Drift:** Der DB-Modus ist Beta, und `LSPlugin.ts` auf master enthält mehr als das veröffentlichte `@logseq/libs` auf npm. Gegenmittel: Contract-Tests und ein Live-Skript, das nach jedem Logseq-Update läuft.
