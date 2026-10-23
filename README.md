@@ -43,6 +43,7 @@ Warum es ihn gibt und wie er aufgebaut ist: [docs/KONZEPT.md](docs/KONZEPT.md). 
 | `LOGSEQ_API_URL` | Standard `http://127.0.0.1:12315`; ein Pfad wird ignoriert, `localhost` wird zu `127.0.0.1` |
 | `LOGSEQ_HIDE_TAGS` | Kommaliste. Knoten mit diesen Tags, oder auf Seiten mit diesen Tags, werden nie gelesen oder geschrieben. `query` ist dann gesperrt |
 | `LOGSEQ_WRITE_PAGES`, `LOGSEQ_WRITE_TAGS` | Kommalisten. Sobald eine gesetzt ist, wird nur auf diesen Seiten oder an Knoten mit diesen Tags geschrieben |
+| `LOGSEQ_ID_PROPERTY` | Property mit der menschenlesbaren ID (Standard `ID`). Verweise tragen dann die `id` ihres Ziels, lassen sich per ID angeben („Derives from“: `"N-007"`) und filtern; `validate_objects` prüft sie auf Eindeutigkeit. Leer schaltet das ab |
 | `LOGSEQ_ENABLE_CALL_API` | `true` schaltet `call_api` frei; gesperrt, solange eine Zugriffsregel gesetzt ist |
 | `LOGSEQ_API_CONNECT_TIMEOUT`, `LOGSEQ_API_READ_TIMEOUT` | Sekunden, Standard 3 und 15 |
 | `LOGSEQ_LOG_LEVEL`, `LOGSEQ_LOG_FILE` | Logging nach stderr, optional zusätzlich in eine Datei. Inhalte werden nie geloggt, nur Toolnamen, Argumentnamen und bei Schreibvorgängen die UUIDs |
@@ -61,6 +62,7 @@ Warum es ihn gibt und wie er aufgebaut ist: [docs/KONZEPT.md](docs/KONZEPT.md). 
 | `get_journal` | Journal eines Datums (Standard heute) |
 | `search` | Volltext ohne Groß-/Kleinschreibung; Treffer in Property-Werten liefern den Block, der den Wert trägt |
 | `query` | Datascript, nur lesend |
+| `validate_objects` | Objekte einer Klasse gegen das Schema prüfen: leere Klassen-Properties, falsche Typen, Verweise auf unerlaubte Tags, gelöschte oder im Papierkorb liegende Knoten, als Text gespeicherte Verweise, doppelte IDs |
 
 **Schreiben** (fallen bei `--read-only` weg)
 
@@ -82,7 +84,7 @@ Warum es ihn gibt und wie er aufgebaut ist: [docs/KONZEPT.md](docs/KONZEPT.md). 
 - Text, Zahl, `true`/`false`
 - Datum als `YYYY-MM-DD`, Zeitpunkt als ISO-Zeit
 - Auswahlwerte über ihren Titel
-- Verweise über UUID oder Titel
+- Verweise über UUID, Titel oder ID (zum Beispiel `N-007`)
 - Listen bei Kardinalität `many`; `null` entfernt den Wert
 
 Der Server prüft jeden Wert gegen das Schema, bevor er schreibt. Bei Verweis-Properties mit erlaubten Tags prüft er auch, ob das Ziel einen davon trägt.
@@ -99,7 +101,7 @@ Zusammengesetzte Tools kennen `dry_run`. `[[Links]]` auf Seiten, die es nicht gi
 
 ### Grenzen
 
-- **Tags und Properties anlegen oder ändern geht nur in der Logseq-Oberfläche.** Über die API entstehen nur Klassen im Plugin-Namespace, und an diese lassen sich später keine Properties hängen (API-BEFUNDE F10). Phase 3 mit `create_property` und `validate_objects` ist noch nicht gebaut.
+- **Tags und Properties anlegen oder ändern geht nur in der Logseq-Oberfläche.** Über die API entstehen nur Klassen im Plugin-Namespace, an die sich später keine Properties hängen lassen, und erlaubte Klassen einer Property lassen sich nicht setzen (API-BEFUNDE F10, I11). `create_property` ist deshalb zurückgestellt.
 - Der Server arbeitet mit dem Graphen, der in Logseq gerade offen ist.
 
 ## Entwickeln

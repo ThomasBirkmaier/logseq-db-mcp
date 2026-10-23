@@ -122,8 +122,8 @@ def _norm(x: Any) -> Any:
 
 
 def _item_eq(item: Any, wanted: Any) -> bool:
-    if isinstance(item, dict):
-        return _norm(wanted) in (item.get("uuid"), _norm(item.get("title")))
+    if isinstance(item, dict):  # a reference: by UUID, title or ID ("N-007")
+        return _norm(wanted) in (item.get("uuid"), _norm(item.get("title")), _norm(item.get("id")))
     return _norm(item) == _norm(wanted)
 
 
@@ -163,7 +163,7 @@ class FindObjects(Tool):
     description = (
         "Objects of a tag (by title, ident or UUID), by default including objects of every tag that "
         "extends it. Filter by property values (`where`, all conditions must hold), sort and page. "
-        "`property` is a property title or ident, or 'title'. Node references match by UUID or title.")
+        "`property` is a property title or ident, or 'title'. Node references match by UUID, title or ID.")
     input_schema = {"type": "object", "properties": {
         "tag": {"type": "string", "minLength": 1},
         "include_subtags": {"type": "boolean", "default": True},

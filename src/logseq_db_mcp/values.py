@@ -43,11 +43,13 @@ def day_to_iso(day: int) -> str:
     return f"{s[:4]}-{s[4:6]}-{s[6:8]}"
 
 
-def decode(prop: Property, raw: Any, entities: dict[int, dict], by_uuid: dict[str, dict] | None = None) -> Any:
+def decode(prop: Property, raw: Any, entities: dict[int, dict], by_uuid: dict[str, dict] | None = None,
+           ids: dict[str, str] | None = None) -> Any:
     """Raw pull value → JSON. ``entities`` holds the referenced entities by id,
-    ``by_uuid`` the targets of references stored as text (``text_ref_uuids``)."""
+    ``by_uuid`` the targets of references stored as text (``text_ref_uuid``),
+    ``ids`` the ID-property value of reference targets by UUID."""
     items = raw if isinstance(raw, list) else [raw]
-    out = [_decode_one(prop, x, entities, by_uuid or {}) for x in items if x is not None]
+    out = [_decode_one(prop, x, entities, by_uuid or {}, ids or {}) for x in items if x is not None]
     if prop.many:
         return out
     return out[0] if out else None
@@ -65,7 +67,15 @@ def text_ref_uuid(prop: Property, value_block: dict) -> str | None:
     return title if isinstance(title, str) and UUID_RE.match(title) else None
 
 
-def _decode_one(prop: Property, x: Any, entities: dict[int, dict], by_uuid: dict[str, dict]) -> Any:
+def ref_json(uuid: str, title: str | None, ids: dict[str, str]) -> dict:
+    out = {"uuid": uuid, "title": title}
+    if uuid in ids:
+        out["id"] = ids[uuid]
+    return out
+
+
+def _decode_one(prop: Property, x: Any, entities: dict[int, dict], by_uuid: dict[str, dict],
+                ids: dict[str, str]) -> Any:
     if isinstance(x, dict) and "id" in x:
         e = entities.get(x["id"])
         if e is None:
@@ -73,13 +83,13 @@ def _decode_one(prop: Property, x: Any, entities: dict[int, dict], by_uuid: dict
         if VALUE_BLOCK in e:
             target = text_ref_uuid(prop, e)
             if target:
-                return {"uuid": target, "title": (by_uuid.get(target) or {}).get("title"), "stored_as_text": True}
+                return {**ref_json(target, (by_uuid.get(target) or {}).get("title"), ids), "stored_as_text": True}
             return e.get(":logseq.property/value", e.get("title"))
         if x["id"] in prop.choices:
             return prop.choices[x["id"]]
         if prop.type == "date" and "journal-day" in e:
             return day_to_iso(e["journal-day"])
-        return {"uuid": e.get("uuid"), "title": e.get("title")}
+        return ref_json(e.get("uuid"), e.get("title"), ids)
     if prop.type == "datetime" and isinstance(x, (int, float)) and not isinstance(x, bool):
         return ms_to_iso(x)
     return x
@@ -99,6 +109,8 @@ class Resolver(Protocol):
     def entity_by_uuid(self, uuid: str) -> dict | None: ...
 
     def entities_by_title(self, title: str) -> list[dict]: ...
+
+    def entities_by_id(self, value: str) -> list[dict]: ...
 
     def journal(self, iso_date: str, create: bool) -> dict | None: ...
 
@@ -202,9 +214,9 @@ def _resolve_node(v: Any, r: Resolver, name: str) -> dict:
         if e is None:
             raise InvalidValue(f"no node with UUID {v}")
         return e
-    hits = r.entities_by_title(v)
+    hits = r.entities_by_title(v) or r.entities_by_id(v)  # a title, else an ID like "N-007"
     if len(hits) == 1:
         return hits[0]
     if not hits:
-        raise InvalidValue(f"no page or tag titled '{v}' (for '{name}'); create it first or give a UUID")
-    raise InvalidValue(f"title '{v}' is ambiguous for '{name}'; give a UUID: {', '.join(h['uuid'] for h in hits)}")
+        raise InvalidValue(f"no page, tag or ID '{v}' (for '{name}'); create it first or give a UUID")
+    raise InvalidValue(f"'{v}' is ambiguous for '{name}'; give a UUID: {', '.join(h['uuid'] for h in hits)}")

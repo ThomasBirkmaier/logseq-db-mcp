@@ -228,7 +228,7 @@ logseq-db-mcp/
 | **0 Spike** | Offene Punkte gegen den Testgraphen SpikeTest klären | erledigt, `docs/API-BEFUNDE.md` |
 | **1 Lesen** | Gerüst, Client, Schema-Cache, Graph; Tools `get_schema`, `resolve`, `get_node`, `find_objects`, `get_backlinks`, `get_journal`, `search`, `query`, `call_api` | **erledigt** |
 | **2 Schreiben** | Werte, Read-back, Zugriffsregeln; `create_page`, `insert_blocks`, `update_block`, `move_blocks`, `rename_page`, `delete_nodes`, `create_objects`, `update_objects`, `tag_nodes`, `untag_nodes`, `add_to_journal` | **erledigt**; ersetzt den Fork in Claude Desktop |
-| **3 Schema und Prüfung** | `create_property` (über `upsertNodes`), `validate_objects`; optional HTTP-Transport, `import_markdown` | offen |
+| **3 Schema und Prüfung** | `validate_objects` und Verweise per ID | **erledigt** (0.2.0); `create_property` zurückgestellt (erlaubte Klassen nicht setzbar, API-BEFUNDE I11); HTTP-Transport, `import_markdown` offen |
 
 ## 8. Offene Punkte und Risiken
 

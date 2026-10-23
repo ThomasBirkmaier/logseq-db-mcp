@@ -27,6 +27,9 @@ class Settings:
     write_tags: tuple[str, ...] = ()
     write_pages: tuple[str, ...] = ()
     enable_call_api: bool = False
+    # property that holds an object's human ID ("N-007"); references can be
+    # given and filtered by it. Empty disables that.
+    id_property: str = "ID"
 
     @property
     def timeout(self) -> tuple[float, float]:
@@ -84,6 +87,7 @@ def load_settings() -> Settings:
         write_tags=_csv_env("LOGSEQ_WRITE_TAGS"),
         write_pages=_csv_env("LOGSEQ_WRITE_PAGES"),
         enable_call_api=_flag_env("LOGSEQ_ENABLE_CALL_API"),
+        id_property=os.getenv("LOGSEQ_ID_PROPERTY", "ID").strip(),
     )
 
 

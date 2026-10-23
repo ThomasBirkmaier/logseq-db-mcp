@@ -28,6 +28,7 @@ REF = {"uuid": U, "title": "Ziel"}
     (None, "empty", None, True), ([], "empty", None, True), ("", "empty", None, True), ("x", "not_empty", None, True),
     (5, "gt", 3, True), (5, "lt", 3, False), (5, "gte", 5, True), ("2031-02-03", "lt", "2031-03-01", True),
     (REF, "eq", U, True), (REF, "eq", "ziel", True), ([REF], "contains", "zie", True),
+    ({**REF, "id": "N-007"}, "eq", "n-007", True), (REF, "eq", "N-007", False),
     ([REF, {"uuid": "x", "title": "Y"}], "eq", "y", True), ("Alpha", "gt", 3, False),
 ])
 def test_matches(value, op, wanted, result):

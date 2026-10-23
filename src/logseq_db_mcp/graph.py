@@ -10,7 +10,7 @@ import logging
 from typing import Any, Iterable
 
 from . import refs, values
-from .client import LogseqClient, edn_int, edn_ints, edn_uuids
+from .client import LogseqClient, edn_int, edn_ints, edn_str, edn_uuids
 from .schema import SchemaCache, SchemaError
 from .settings import Settings
 
@@ -72,6 +72,38 @@ class Graph:
         wanted = title.strip().lower()
         ids = [i for i, t in self.titled_entities() if isinstance(t, str) and t.lower() == wanted]
         return list(self.pull_ids(ids).values())
+
+    def id_property(self):
+        """The property holding human IDs (settings.id_property), if the graph has it."""
+        name = self.settings.id_property
+        if not name:
+            return None
+        try:
+            return self.schema.get().property(name)
+        except SchemaError:
+            return None
+
+    def entities_by_id(self, value: str) -> list[dict]:
+        """Live entities whose ID property is ``value`` (text IDs, stored as value blocks)."""
+        p = self.id_property()
+        if p is None or not isinstance(value, str):
+            return []
+        rows = self.client.q(f"[:find ?h :in $ ?v :where [?b :block/title ?v] [?h {p.ident} ?b]]", edn_str(value))
+        return [e for e in self.pull_ids(r[0] for r in rows).values() if DELETED_AT not in e]
+
+    def ids_of(self, entities: Iterable[dict]) -> dict[str, str]:
+        """UUID → ID-property value for the given entities that have one."""
+        p = self.id_property()
+        if p is None:
+            return {}
+        holders = {e["uuid"]: values.referenced_ids(e.get(p.ident)) for e in entities if p.ident in e}
+        blocks = self.pull_ids(i for ids in holders.values() for i in ids)
+        out = {}
+        for uuid, ids in holders.items():
+            v = values.decode(p, [{"id": i} for i in ids] if p.many else {"id": ids[0]}, blocks) if ids else None
+            if isinstance(v, (str, int, float)) and not isinstance(v, bool):
+                out[uuid] = str(v)
+        return out
 
     def journal(self, iso_date: str, create: bool = False) -> dict | None:
         day = int(iso_date.replace("-", ""))
@@ -199,6 +231,10 @@ class Graph:
             pulled = self.pull_uuids(missing)
             by_uuid.update(pulled)
             titles.update({u: e.get("title") for u, e in pulled.items()})
+        # human IDs of everything a property points to
+        targets = [e for e in by_uuid.values() if not is_value_block(e) and e["id"] not in known]
+        targets += [n for n in all_nodes]
+        id_labels = self.ids_of(targets)
 
         hide = self.tag_ids_for_names(self.settings.hide_tags) if self.settings.hide_tags else set()
 
@@ -231,7 +267,7 @@ class Graph:
                 p = schema.properties.get(key)
                 if p is None or not p.shown:
                     continue
-                value = values.decode(p, raw, ents, by_uuid)
+                value = values.decode(p, raw, ents, by_uuid, id_labels)
                 props[p.title] = {"ident": p.ident, "value": value} if include_idents else value
             if props:
                 out["properties"] = props

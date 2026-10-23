@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.0] - 2026-10-23
+
+### Added
+
+- `validate_objects`: Objekte einer Klasse gegen das Schema prüfen (leere Klassen-Properties, falsche Typen, unerlaubte Tags, verwaiste und gelöschte Ziele, als Text gespeicherte Verweise, doppelte IDs)
+- Verweise über die ID-Property (`LOGSEQ_ID_PROPERTY`, Standard `ID`): Ausgabe mit `id`, Angabe als `"N-007"`, Filter in `find_objects`
+- `scripts/repair_text_refs.py`: als Text gespeicherte Verweise reparieren
+
+### Fixed
+
+- Als Text gespeicherte Verweise (UUID im Text-Wert-Block) werden als Verweis gelesen; Überschreiben räumt den alten Wert-Block weg
+- Seiten im Papierkorb (`deletePage`) und Blöcke darauf erscheinen nicht mehr in Listen und Suchen
+- Das installierte Paket wird bei Codeänderungen neu gebaut (`[tool.uv] cache-keys`)
+
 ## [0.1.0] - 2026-10-23
 
 Erste Version: Phase 1 (Lesen) und Phase 2 (Schreiben) aus `docs/KONZEPT.md`.

@@ -12,7 +12,7 @@ from .base import UUID_SCHEMA, Context, Tool
 
 VALUE_HELP = (
     "Properties: {title or ident: value}. Text, number, true/false, ISO date 'YYYY-MM-DD' (date), "
-    "ISO date-time (datetime), a choice title, a node UUID or title (node), a list for 'many' "
+    "ISO date-time (datetime), a choice title, a node UUID, title or ID like N-007 (node), a list for 'many' "
     "properties, null to remove.")
 
 BLOCK_SCHEMA = {

@@ -24,6 +24,9 @@ class Resolver:
     def entities_by_title(self, title):
         return [e for e in (TARGET, OTHER) if e["title"].lower() == title.lower()]
 
+    def entities_by_id(self, value):
+        return [TARGET] if value == "N-007" else []
+
     def journal(self, iso, create):
         if create:
             self.created_journals.append(iso)
@@ -66,7 +69,8 @@ def test_encode_node_by_uuid_or_title_and_classes():
     assert values.encode(prop("node"), "ziel", Resolver()).expected["uuid"] == TARGET["uuid"]
     with pytest.raises(InvalidValue, match="none of the tags"):
         values.encode(prop("node", classes=[4]), "Andere", Resolver())
-    with pytest.raises(InvalidValue, match="no page or tag"):
+    assert values.encode(prop("node"), "N-007", Resolver()).value == 10  # by ID
+    with pytest.raises(InvalidValue, match="no page, tag or ID"):
         values.encode(prop("node"), "Gibt es nicht", Resolver())
 
 
@@ -103,6 +107,8 @@ def test_decode():
     assert values.decode(prop("node", many=True), [{"id": 10}], ents) == [{"uuid": TARGET["uuid"], "title": "Ziel"}]
     assert values.decode(prop(many=True), None, ents) == []
     assert values.decode(prop("node"), {"id": 99}, ents) == {"id": 99}
+    assert values.decode(prop("node"), {"id": 10}, ents, ids={TARGET["uuid"]: "N-007"}) == \
+        {"uuid": TARGET["uuid"], "title": "Ziel", "id": "N-007"}
 
 
 def test_decode_reference_stored_as_text():
