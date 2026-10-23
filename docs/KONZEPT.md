@@ -8,7 +8,7 @@ Stand 2026-10-23: **Phase 1 und 2 umgesetzt** (Abschnitt 7.2), die Befunde der A
 
 - **Nur DB-Graphen.** Kein Dateimodus, keine `key:: value`-Syntax, kein Markdown als Datenmodell.
 - Die Begriffe des Servers sind die des DB-Graphen: **Knoten** (Seite oder Block), **Tag/Klasse** mit Vererbung und Klassen-Properties, **Property** mit Typ und Kardinalität, **typisierte Werte**.
-- Generisch, nicht RE-spezifisch. Regeln des Requirements-Graphen (welche Klassen, welche Pflicht-Properties) bleiben im Skill `logseq-re-graph`. Der Server liefert nur die Werkzeuge, mit denen der Skill sie prüfen kann (`validate_objects`).
+- Generisch, nicht RE-spezifisch. Regeln eines bestimmten Graphen (welche Klassen, welche Properties gefüllt sein müssen) gehören nicht in den Server, sondern zu dem, der ihn nutzt. Der Server liefert nur die Werkzeuge, um sie zu prüfen (`validate_objects`).
 - Lokal, stdio zuerst. HTTP-Transport ist optional und kommt später.
 
 ## 2. Ausgangslage: was es schon gibt

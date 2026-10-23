@@ -9,7 +9,7 @@
 
 ### Changed
 
-- Die Aussage „Tags anlegen geht nicht“ war zu streng: Es geht, nur nicht im Namensraum `user.class`. README, Konzept und Skill korrigiert
+- Die Aussage „Tags anlegen geht nicht“ war zu streng: Es geht, nur nicht im Namensraum `user.class`. README und Konzept korrigiert
 
 ## [0.3.0] - 2026-10-23
 
