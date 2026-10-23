@@ -62,7 +62,7 @@ Warum es ihn gibt und wie er aufgebaut ist: [docs/KONZEPT.md](docs/KONZEPT.md). 
 | `get_journal` | Journal eines Datums (Standard heute) |
 | `search` | Volltext ohne Groß-/Kleinschreibung; Treffer in Property-Werten liefern den Block, der den Wert trägt |
 | `query` | Datascript, nur lesend |
-| `validate_objects` | Objekte einer Klasse gegen das Schema prüfen: leere Klassen-Properties, falsche Typen, Verweise auf unerlaubte Tags, gelöschte oder im Papierkorb liegende Knoten, als Text gespeicherte Verweise, doppelte IDs |
+| `validate_objects` | Objekte einer Klasse gegen das Schema prüfen: leere Klassen-Properties, falsche Typen, Verweise auf unerlaubte Tags, gelöschte oder im Papierkorb liegende Knoten, als Text gespeicherte Verweise, doppelte IDs. `optional` nimmt Properties aus, die leer bleiben dürfen |
 
 **Schreiben** (fallen bei `--read-only` weg)
 

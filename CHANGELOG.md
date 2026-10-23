@@ -4,7 +4,7 @@
 
 ### Added
 
-- `validate_objects`: Objekte einer Klasse gegen das Schema prüfen (leere Klassen-Properties, falsche Typen, unerlaubte Tags, verwaiste und gelöschte Ziele, als Text gespeicherte Verweise, doppelte IDs)
+- `validate_objects`: Objekte einer Klasse gegen das Schema prüfen (leere Klassen-Properties, falsche Typen, unerlaubte Tags, verwaiste und gelöschte Ziele, als Text gespeicherte Verweise, doppelte IDs); `optional` nimmt Klassen-Properties aus, die leer bleiben dürfen (Logseq kennt keine Pflichtfelder)
 - Verweise über die ID-Property (`LOGSEQ_ID_PROPERTY`, Standard `ID`): Ausgabe mit `id`, Angabe als `"N-007"`, Filter in `find_objects`
 - `scripts/repair_text_refs.py`: als Text gespeicherte Verweise reparieren
 

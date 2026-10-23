@@ -12,7 +12,8 @@ from ..schema import REF_TYPES, Property
 from .base import Context, Tool
 
 ISSUES = {
-    "missing": "a class property of one of the object's tags is empty",
+    "missing": "a class property of one of the object's tags is empty (Logseq has no required properties; "
+               "pass the ones that may stay empty as `optional`)",
     "wrong_type": "the stored value does not fit the property type",
     "disallowed_tag": "a reference points to a node without any of the allowed tags",
     "dangling": "a reference points to a node that no longer exists",
@@ -32,6 +33,8 @@ class ValidateObjects(Tool):
     input_schema = {"type": "object", "properties": {
         "tag": {"type": "string", "minLength": 1},
         "include_subtags": {"type": "boolean", "default": True},
+        "optional": {"type": "array", "items": {"type": "string"},
+                     "description": "Class properties that may stay empty, e.g. 'Supersedes'"},
         "unique": {"type": "array", "items": {"type": "string"},
                    "description": "Properties whose values must be unique; default: the ID property"},
         "checks": {"type": "array", "items": {"enum": sorted(ISSUES)},
@@ -44,6 +47,7 @@ class ValidateObjects(Tool):
         tag = ctx.schema.tag(args["tag"])
         tag_ids = schema.subtags(tag.id) if args.get("include_subtags", True) else {tag.id}
         checks = set(args.get("checks") or ISSUES)
+        optional = {ctx.schema.property(n).ident for n in args.get("optional") or []}
         rows = ctx.client.q("[:find ?b :in $ [?t ...] :where [?b :block/tags ?t]]", edn_ints(tag_ids))
         objects = [o for o in g.pull_ids(r[0] for r in rows).values()
                    if DELETED_AT not in o and not g.hidden(o)]
@@ -68,6 +72,8 @@ class ValidateObjects(Tool):
             required = {p.ident: p for t in obj_tags for p in schema.class_properties(t)}
             if "missing" in checks:
                 for ident, p in required.items():
+                    if ident in optional:
+                        continue
                     if not values.referenced_ids(o.get(ident)) and o.get(ident) in (None, [], ""):
                         owners = [schema.tags[t].title for t in obj_tags
                                   if any(q.ident == ident for q in schema.class_properties(t))]
