@@ -18,4 +18,4 @@ uv run --no-editable pytest -m live         # schreibt in SpikeTest; verweigert 
 uv run --no-editable python scripts/record_fixtures.py
 ```
 
-`--no-editable` ist auf diesem Mac nötig (versteckte `.pth`-Dateien, siehe README). Live-Tests und Spike **nie gegen ReqSeq**; der produktive Graph des Nutzers ist ReqSeq, der Testgraph SpikeTest. Schreib-Experimente nur in SpikeTest und nur, wenn er offen ist (`logseq.App.getCurrentGraph`).
+`--no-editable` ist auf diesem Mac nötig (versteckte `.pth`-Dateien, siehe README). Tests laden aus `src/` (pytest `pythonpath`), Claude Desktop dagegen das installierte Paket: Ob dort der aktuelle Stand läuft, zeigt `diff -rq --exclude=__pycache__ src/logseq_db_mcp .venv/lib/python3.12/site-packages/logseq_db_mcp`. Live-Tests und Spike **nie gegen ReqSeq**; der produktive Graph des Nutzers ist ReqSeq, der Testgraph SpikeTest. Schreib-Experimente nur in SpikeTest und nur, wenn er offen ist (`logseq.App.getCurrentGraph`).

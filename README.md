@@ -31,7 +31,7 @@ Warum es ihn gibt und wie er aufgebaut ist: [docs/KONZEPT.md](docs/KONZEPT.md). 
 }
 ```
 
-`--no-editable` ist auf macOS nötig: Python 3.12.13 überspringt `.pth`-Dateien, die macOS als „hidden“ markiert, und eine editierbare Installation findet ihr Paket dann nicht. Nach Codeänderungen muss Claude Desktop neu starten.
+`--no-editable` ist auf macOS nötig: Python 3.12.13 überspringt `.pth`-Dateien, die macOS als „hidden“ markiert, und eine editierbare Installation findet ihr Paket dann nicht. Nach Codeänderungen muss Claude Desktop neu starten; `uv run` baut das Paket dann neu, weil `src/**/*.py` in `[tool.uv] cache-keys` steht. Ohne diesen Eintrag liefe der alte Stand weiter, weil uv nur auf `pyproject.toml` achtet.
 
 `--read-only` (an `args` anhängen) bietet nur die lesenden Tools an.
 

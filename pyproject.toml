@@ -22,6 +22,11 @@ logseq-db-mcp = "logseq_db_mcp:main"
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[tool.uv]
+# uv rebuilds a local package only when a cache key changes; without src/ a
+# code change would leave the old build running behind --no-editable.
+cache-keys = [{ file = "pyproject.toml" }, { file = "src/**/*.py" }]
+
 [tool.hatch.build.targets.sdist]
 only-include = ["src"]
 
