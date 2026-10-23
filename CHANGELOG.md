@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.4.0] - 2026-10-23
+
+### Added
+
+- `create_tag`: Tags anlegen, mit Vererbung und Klassen-Properties. Das Ident liegt im Plugin-Namensraum; in der Oberfläche verhalten sich solche Tags wie eigene (API-BEFUNDE I21)
+- `update_tag` kann Tags umbenennen (`title`), auch Tags aus der Oberfläche
+
+### Changed
+
+- Die Aussage „Tags anlegen geht nicht“ war zu streng: Es geht, nur nicht im Namensraum `user.class`. README, Konzept und Skill korrigiert
+
 ## [0.3.0] - 2026-10-23
 
 ### Added

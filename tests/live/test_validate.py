@@ -58,8 +58,10 @@ def test_validate_objects(vt, model):
     assert "recycled_target" in by[recycled_ref]
     assert "text_reference" in by[text_ref]
     assert r["summary"]["duplicate"] >= 2 and r["legend"]["duplicate"]
-    relaxed = vt("validate_objects", tag=f"{p} Basis", optional=[f"lt{model['p'][3:]}Pflicht"])
-    assert "missing" not in relaxed["summary"]
+    pflicht = f"lt{model['p'][3:]}Pflicht"
+    relaxed = vt("validate_objects", tag=f"{p} Basis", optional=[pflicht])
+    # other tests may add subtags of Basis with their own class properties; only Pflicht must be gone
+    assert not [i for i in relaxed["issues"] if i["issue"] == "missing" and i.get("property") == pflicht]
     only = vt("validate_objects", tag=f"{p} Basis", checks=["text_reference"])
     assert {i["issue"] for i in only["issues"]} == {"text_reference"}
 

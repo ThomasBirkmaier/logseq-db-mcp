@@ -4,7 +4,8 @@ Each goes the way that was measured to work, not the one the plugin API
 names: properties are created through Logseq's own MCP (``upsertNodes``,
 gives ``user.property``), attached to tags by writing the tag's
 ``:logseq.property.class/properties`` directly, renamed with ``renamePage``.
-Tags themselves can only be created in the UI.
+Tags created here land in the plugin namespace (``:plugin.class._test_plugin/…``,
+F5); in the UI they behave like tags made there (checked by Thomas in SpikeTest).
 """
 
 from __future__ import annotations
@@ -245,10 +246,11 @@ class UpdateTag(Tool):
     name = "update_tag"
     writes = True
     description = (
-        "Change a tag (class): its class properties (add, remove, or set the exact list) and what it "
-        "extends. Works for tags created in the UI. Tags cannot be created or renamed here.")
+        "Change a tag (class): rename it, its class properties (add, remove, or set the exact list) and "
+        "what it extends. Works for tags created in the UI as well.")
     input_schema = {"type": "object", "properties": {
         "tag": {"type": "string", "minLength": 1},
+        "title": {"type": "string", "minLength": 1, "description": "new name; objects keep the tag"},
         "add_properties": {"type": "array", "items": {"type": "string"}},
         "remove_properties": {"type": "array", "items": {"type": "string"}},
         "properties": {"type": "array", "items": {"type": "string"},
@@ -268,6 +270,10 @@ class UpdateTag(Tool):
             return schema.properties_by_id[pid].title if pid in schema.properties_by_id else str(pid)
 
         plan: dict = {}
+        new_title = (args.get("title") or "").strip()
+        if new_title and new_title != tag.title:
+            _free_title(ctx, new_title, "a tag")
+            plan["title"] = {"old": tag.title, "new": new_title}
 
         if "properties" in args and (args.get("add_properties") or args.get("remove_properties")):
             raise InvalidValue("give either properties or add_properties/remove_properties")
@@ -310,6 +316,8 @@ class UpdateTag(Tool):
         if w.dry_run:
             return {"dry_run": True, "tag": tag.title, "changes": plan}
 
+        if "title" in plan:
+            w._call(f"rename tag {tag.title}", "logseq.Editor.renamePage", tag.uuid, new_title)
         if "properties" in plan:
             w.set_class_properties(tag, wanted)
         for t in add_ext:
@@ -321,6 +329,8 @@ class UpdateTag(Tool):
         if after is None:
             w.problems.append("tag not found after writing")
         else:
+            if "title" in plan and after.title != new_title:
+                w.problems.append(f"title is {after.title!r}")
             if "properties" in plan and sorted(after.properties) != sorted(wanted):
                 w.problems.append(f"class properties are {[title(i) for i in after.properties]}")
             for t in add_ext:
@@ -329,7 +339,55 @@ class UpdateTag(Tool):
             for t in rem_ext:
                 if t.id in after.extends:
                     w.problems.append(f"still extends {t.title}")
-        return w.result(tag={"title": tag.title, "uuid": tag.uuid}, changes=plan, changed=[tag.uuid])
+        return w.result(tag={"title": (after or tag).title, "uuid": tag.uuid}, changes=plan, changed=[tag.uuid])
+
+
+class CreateTag(Tool):
+    name = "create_tag"
+    writes = True
+    description = (
+        "Create a tag (class), optionally extending other tags and with class properties. The tag gets an "
+        "ident in the plugin namespace (:plugin.class._test_plugin/…), not :user.class/… as in the UI; it "
+        "works the same in Logseq, but ask Thomas before creating tags in ReqSeq.")
+    input_schema = {"type": "object", "properties": {
+        "title": {"type": "string", "minLength": 1},
+        "extends": {"type": "array", "items": {"type": "string"}},
+        "properties": {"type": "array", "items": {"type": "string"}, "description": "class properties"},
+        "dry_run": DRY_RUN},
+        "required": ["title"]}
+
+    def run(self, ctx: Context, args: dict) -> Any:
+        _guard(ctx)
+        title = args["title"].strip()
+        _free_title(ctx, title, "a tag")
+        extends = [_user_or_any_tag(ctx, n) for n in args.get("extends") or []]
+        props = [_user_property(ctx, n) for n in args.get("properties") or []]
+        if len({p.id for p in props}) != len(props):
+            raise InvalidValue("a property is listed twice")
+        plan = {"title": title, "extends": [t.title for t in extends], "properties": [p.title for p in props]}
+        if args.get("dry_run"):
+            return {"dry_run": True, "tag": plan}
+
+        w = _SchemaWriter(ctx)
+        created = w._call(f"create tag '{title}'", "logseq.Editor.createTag", title)
+        if not isinstance(created, dict) or not created.get("uuid"):
+            raise InvalidValue(f"Logseq did not create the tag '{title}' (answer: {created!r})")
+        w.reload()
+        result = {"tag": {"title": title, "uuid": created["uuid"], "ident": created.get("ident")},
+                  "verified": True, "problems": []}
+        if extends or props:
+            changes = {"tag": created["uuid"]}
+            if extends:
+                changes["add_extends"] = [t.uuid for t in extends]
+            if props:
+                changes["properties"] = [p.ident for p in props]
+            more = UpdateTag().run(ctx, changes)
+            result["verified"], result["problems"] = more["verified"], more["problems"]
+        t = ctx.schema.get().tags.get(ctx.schema.tag(created["uuid"]).id)
+        if t is None or t.title != title:
+            result["verified"] = False
+            result["problems"].append(f"tag is {getattr(t, 'title', None)!r} after writing")
+        return {**result, "changed": [created["uuid"]]}
 
 
 def _user_or_any_tag(ctx: Context, name: str) -> Tag:
@@ -341,4 +399,4 @@ def _user_or_any_tag(ctx: Context, name: str) -> Tag:
     return t
 
 
-SCHEMA_TOOLS = [CreateProperty(), UpdateProperty(), UpdateTag()]
+SCHEMA_TOOLS = [CreateTag(), UpdateTag(), CreateProperty(), UpdateProperty()]

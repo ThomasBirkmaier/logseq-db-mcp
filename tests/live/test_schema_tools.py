@@ -106,3 +106,42 @@ def test_update_tag_on_ui_tag(tool, model):
 def test_schema_tools_refuse_with_access_rules(model):
     limited = Runner(make_settings(write_pages=(f"{model['p']} Ziel",)))
     assert "schema changes are disabled" in limited.error("create_property", title=f"{model['p']} Verboten")
+
+
+def test_create_and_rename_tag(tool, model):
+    p = model["p"]
+    plan = tool("create_tag", title=f"{p} Neuer Tag", extends=[f"{p} Basis"], properties=[f"{p} text", f"{p} number"],
+                dry_run=True)
+    assert plan["dry_run"] and f"{p} Neuer Tag" not in schema(tool)[0]
+
+    r = tool("create_tag", title=f"{p} Neuer Tag", extends=[f"{p} Basis"], properties=[f"{p} text", f"{p} number"])
+    assert r["verified"], r["problems"]
+    assert r["tag"]["ident"].startswith(":plugin.class.")
+    t = schema(tool)[0][f"{p} Neuer Tag"]
+    # Logseq keeps class properties as a set: the order given is not kept (API-BEFUNDE I21)
+    assert t["extends"] == [f"{p} Basis"] and sorted(t["properties"]) == sorted([f"{p} text", f"{p} number"])
+    assert t["inherited_properties"]  # Basis' class property
+
+    page = tool("create_page", title=f"{p} Neue Tag-Objekte")["page"]["uuid"]
+    obj = tool("create_objects", objects=[{"tags": [f"{p} Neuer Tag"], "title": "mit neuem Tag", "target": page,
+                                           "properties": {f"{p} number": 1}}])["objects"][0]["uuid"]
+    assert any(o["uuid"] == obj for o in tool("find_objects", tag=f"{p} Basis")["objects"])  # via the subtag
+
+    assert tool("update_tag", tag=f"{p} Neuer Tag", title=f"{p} Umbenannter Tag")["verified"]
+    tags = schema(tool)[0]
+    assert f"{p} Umbenannter Tag" in tags and f"{p} Neuer Tag" not in tags
+    assert [x["title"] for x in tool("get_node", uuid=obj, depth=0)["tags"]] == [f"{p} Umbenannter Tag"]
+
+    assert "already exists" in tool.error("create_tag", title=f"{p} Basis")
+    assert "already exists" in tool.error("update_tag", tag=f"{p} Umbenannter Tag", title=f"{p} Andere")
+    assert "cannot be extended" in tool.error("create_tag", title=f"{p} X4", extends=["Page"])
+
+
+def test_rename_ui_tag_and_back(tool, model):
+    if not tool.ctx.graph.entities_by_title("Spike UI Tag"):
+        pytest.skip("SpikeTest has no 'Spike UI Tag'")
+    p = model["p"]
+    assert tool("update_tag", tag="Spike UI Tag", title=f"{p} UI Tag umbenannt")["verified"]
+    assert f"{p} UI Tag umbenannt" in schema(tool)[0]
+    assert tool("update_tag", tag=f"{p} UI Tag umbenannt", title="Spike UI Tag")["verified"]
+    assert "Spike UI Tag" in schema(tool)[0]

@@ -80,7 +80,8 @@ Warum es ihn gibt und wie er aufgebaut ist: [docs/KONZEPT.md](docs/KONZEPT.md). 
 | `add_to_journal` | Blöcke an ein Journal anhängen, legt es bei Bedarf an |
 | `create_property` | Property anlegen wie in der Oberfläche (`user.property`): Typ, Kardinalität, erlaubte Tags, Auswahlwerte, gleich an Tags hängen |
 | `update_property` | Property umbenennen (Werte bleiben), erlaubte Tags ersetzen, Auswahlwerte ergänzen |
-| `update_tag` | Klassen-Properties eines Tags ergänzen, entfernen oder genau setzen; Vererbung setzen und entfernen, auch bei Tags aus der Oberfläche |
+| `create_tag` | Tag (Klasse) anlegen, mit Vererbung und Klassen-Properties; Ident im Plugin-Namensraum (siehe Grenzen) |
+| `update_tag` | Tag umbenennen, Klassen-Properties ergänzen, entfernen oder genau setzen, Vererbung setzen und entfernen, auch bei Tags aus der Oberfläche |
 | `call_api` | Notausgang: jede Methode der Plugin-API (opt-in) |
 
 **Werte** werden so angegeben:
@@ -104,7 +105,7 @@ Zusammengesetzte Tools kennen `dry_run`. `[[Links]]` auf Seiten, die es nicht gi
 
 ### Grenzen
 
-- **Tags anlegen oder umbenennen geht nur in der Logseq-Oberfläche** (API-BEFUNDE F10). Alles Weitere am Schema erledigen `create_property`, `update_property` und `update_tag` über die Wege aus I16 bis I20. Typ und Kardinalität einer Property lassen sich nicht ändern, Auswahlwerte nicht entfernen. Schema-Tools sind gesperrt, solange Zugriffsregeln gesetzt sind.
+- **Tags aus `create_tag` haben ein Ident im Plugin-Namensraum** (`:plugin.class._test_plugin/…`) statt `:user.class/…` wie aus der Oberfläche (API-BEFUNDE F10, I21). In Logseq verhalten sie sich gleich: taggen, vererben, in der Oberfläche bearbeiten und umbenennen. Die Kennung `_test_plugin` vergibt der HTTP-API-Server (I9). Typ und Kardinalität einer Property lassen sich nicht ändern, Auswahlwerte nicht entfernen, die Reihenfolge der Klassen-Properties nicht festlegen. Schema-Tools sind gesperrt, solange Zugriffsregeln gesetzt sind.
 - Der Server arbeitet mit dem Graphen, der in Logseq gerade offen ist.
 
 ## Entwickeln

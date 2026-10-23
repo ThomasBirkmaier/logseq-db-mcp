@@ -54,6 +54,7 @@ Gelesen wird über `logseq.DB.datascriptQuery` mit `pull [*]`; dann hat jede Ent
 | I18 | `upsertNodes` mit `edit` | Für Seiten, Tags und Properties nicht unterstützt („Editing a page, tag or property isn't supported yet“); nur `add` geht |
 | I19 | Vererbung an `user.class` | `addTagExtends` und `removeTagExtends` wirken auch an Tags aus der Oberfläche |
 | I20 | Property umbenennen | `renamePage(<Property-UUID>, <neuer Titel>)` benennt eine Property um; das Ident bleibt, Werte bleiben erhalten |
+| I21 | Tags über die API | `createTag` legt `:plugin.class._test_plugin/…` an (F5). In der Oberfläche lässt sich so ein Tag wie ein eigener bearbeiten und umbenennen (von Thomas in SpikeTest geprüft); Umbenennen behält das Ident. `renamePage` mit der Tag-UUID benennt um, auch bei `user.class`. Klassen-Properties sind eine Menge: Die angegebene Reihenfolge bleibt nicht erhalten |
 | I9 | Plugin-Kennung | Alles, was über die HTTP-API angelegt wird, landet unter `_test_plugin`. **Annahme:** Die Kennung kommt vom HTTP-API-Server selbst; ändert Logseq sie, wechselt der Namespace neuer API-Properties |
 
 ## Was daraus im Server folgt

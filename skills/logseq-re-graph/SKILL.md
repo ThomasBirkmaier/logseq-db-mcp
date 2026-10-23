@@ -14,8 +14,11 @@ Gilt für jede Arbeit an Thomas' Requirements-Spec im Logseq-DB-Graph **ReqSeq**
 - Bei Verbindungsfehlern („not reachable“): Thomas bitten, Logseq zu öffnen und den HTTP-API-Server über den 🔌-Button zu starten.
 
 ## Metamodell
-- Tags (Klassen) anlegen oder umbenennen kann nur Thomas, in der Oberfläche.
-- Alles andere am Metamodell kann ich, aber **nur nach Thomas' Okay**: `create_property` (Typ, Kardinalität, erlaubte Tags, Auswahlwerte, gleich an Tags hängen), `update_property` (umbenennen, erlaubte Tags, Auswahlwerte ergänzen), `update_tag` (Klassen-Properties, Vererbung). Erst mit `dry_run: true`, Plan zeigen, dann ausführen.
+- Das Metamodell ändere ich **nur nach Thomas' Okay**, jeweils erst mit `dry_run: true`, Plan zeigen, dann ausführen:
+  - `create_tag`: Tag mit Vererbung und Klassen-Properties. Das Ident landet im Plugin-Namensraum (`:plugin.class._test_plugin/…`); in der Oberfläche verhält sich der Tag wie ein eigener. Das beim Vorschlag erwähnen.
+  - `update_tag`: umbenennen, Klassen-Properties, Vererbung.
+  - `create_property`: Typ, Kardinalität, erlaubte Tags, Auswahlwerte, gleich an Tags hängen.
+  - `update_property`: umbenennen, erlaubte Tags, Auswahlwerte ergänzen.
 - Typ und Kardinalität einer Property lassen sich nicht ändern, Auswahlwerte nicht entfernen; das macht Thomas in der Oberfläche.
 
 ## Lesen
