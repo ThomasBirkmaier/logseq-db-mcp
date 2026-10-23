@@ -15,8 +15,8 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from . import refs, values
-from .client import LogseqError
-from .schema import SHOWN_BUILTINS, Property, Tag
+from .client import LogseqError, edn_int
+from .schema import REF_TYPES, SHOWN_BUILTINS, Property, Tag
 from .tools.base import Context
 from .values import Encoded, InvalidValue
 
@@ -125,8 +125,10 @@ class Writer:
 
     def apply_props(self, uuid: str, props: list[tuple[Property, Encoded | None]]) -> None:
         for p, enc in props:
+            stale = self._text_ref_blocks(uuid, p)
             if enc is None:
                 self._call(f"remove {p.title} on {uuid}", "logseq.Editor.removeBlockProperty", uuid, p.ident)
+                self._drop_orphans(p, stale)
                 continue
             if enc.value is None and p.type == "date":  # journal planned in a dry run
                 enc = values.encode(p, enc.expected, self.graph, create_journals=True)
@@ -138,6 +140,22 @@ class Writer:
                     pass
             self._call(f"set {p.title} on {uuid}", "logseq.Editor.upsertBlockProperty",
                        uuid, p.ident, enc.value, enc.opts)
+            self._drop_orphans(p, stale)
+
+    def _text_ref_blocks(self, uuid: str, p: Property) -> list[dict]:
+        """Value blocks of ``p`` on ``uuid`` that hold a reference as text (API-BEFUNDE I10)."""
+        if p.type not in REF_TYPES or self.dry_run:
+            return []
+        e = self.graph.entity_by_uuid(uuid) or {}
+        blocks = self.graph.pull_ids(values.referenced_ids(e.get(p.ident))).values()
+        return [b for b in blocks if values.text_ref_uuid(p, b)]
+
+    def _drop_orphans(self, p: Property, blocks: list[dict]) -> None:
+        """Replacing such a value leaves its block behind; remove it once nothing uses it."""
+        for b in blocks:
+            if self.client.q(f"[:find ?h :in $ ?v :where [?h {p.ident} ?v]]", edn_int(b["id"])):
+                continue
+            self._call(f"remove orphaned value block {b['uuid']}", "logseq.Editor.removeBlock", b["uuid"])
 
     def _insert_one(self, target: dict, position: str, block: PreparedBlock) -> None:
         """Insert one block (without children) relative to ``target``."""

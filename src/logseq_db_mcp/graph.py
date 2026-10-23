@@ -41,7 +41,8 @@ class Graph:
         if not ids:
             return {}
         rows = self.client.q("[:find (pull ?e [*]) :in $ [?e ...]]", edn_ints(ids))
-        return {e["id"]: e for (e,) in rows if isinstance(e, dict) and "id" in e}
+        # a pull on a deleted entity still answers {"id": N}; that is not an entity
+        return {e["id"]: e for (e,) in rows if isinstance(e, dict) and "id" in e and "uuid" in e}
 
     def pull_uuids(self, uuids: Iterable[str]) -> dict[str, dict]:
         uuids = sorted(set(uuids))
