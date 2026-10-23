@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.3.0] - 2026-10-23
+
+### Added
+
+- Schema-Tools: `create_property` (als `user.property`, mit Typ, Kardinalität, erlaubten Tags, Auswahlwerten und Zuordnung zu Tags), `update_property` (umbenennen, erlaubte Tags, Auswahlwerte ergänzen), `update_tag` (Klassen-Properties und Vererbung, auch bei Tags aus der Oberfläche). Grundlage: API-BEFUNDE I15 bis I20; nur Tags anlegen bleibt in der Oberfläche
+
 ## [0.2.1] - 2026-10-23
 
 ### Fixed

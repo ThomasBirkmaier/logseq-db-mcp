@@ -78,6 +78,9 @@ Warum es ihn gibt und wie er aufgebaut ist: [docs/KONZEPT.md](docs/KONZEPT.md). 
 | `update_objects` | Titel und Properties setzen oder mit `null` entfernen, mehrere Knoten je Aufruf |
 | `tag_nodes`, `untag_nodes` | Tags setzen oder entfernen |
 | `add_to_journal` | Blöcke an ein Journal anhängen, legt es bei Bedarf an |
+| `create_property` | Property anlegen wie in der Oberfläche (`user.property`): Typ, Kardinalität, erlaubte Tags, Auswahlwerte, gleich an Tags hängen |
+| `update_property` | Property umbenennen (Werte bleiben), erlaubte Tags ersetzen, Auswahlwerte ergänzen |
+| `update_tag` | Klassen-Properties eines Tags ergänzen, entfernen oder genau setzen; Vererbung setzen und entfernen, auch bei Tags aus der Oberfläche |
 | `call_api` | Notausgang: jede Methode der Plugin-API (opt-in) |
 
 **Werte** werden so angegeben:
@@ -101,7 +104,7 @@ Zusammengesetzte Tools kennen `dry_run`. `[[Links]]` auf Seiten, die es nicht gi
 
 ### Grenzen
 
-- **Tags und Properties anlegen oder ändern geht nur in der Logseq-Oberfläche.** Über die API entstehen nur Klassen im Plugin-Namespace, an die sich später keine Properties hängen lassen, und erlaubte Klassen einer Property lassen sich nicht setzen (API-BEFUNDE F10, I11). `create_property` ist deshalb zurückgestellt.
+- **Tags anlegen oder umbenennen geht nur in der Logseq-Oberfläche** (API-BEFUNDE F10). Alles Weitere am Schema erledigen `create_property`, `update_property` und `update_tag` über die Wege aus I16 bis I20. Typ und Kardinalität einer Property lassen sich nicht ändern, Auswahlwerte nicht entfernen. Schema-Tools sind gesperrt, solange Zugriffsregeln gesetzt sind.
 - Der Server arbeitet mit dem Graphen, der in Logseq gerade offen ist.
 
 ## Entwickeln
