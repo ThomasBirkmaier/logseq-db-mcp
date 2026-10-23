@@ -13,9 +13,10 @@ Gilt für jede Arbeit an Thomas' Requirements-Spec im Logseq-DB-Graph **ReqSeq**
 - `get_schema` lesen: Tags mit Vererbung und Klassen-Properties, Properties mit Typ, erlaubten Klassen und Auswahlwerten.
 - Bei Verbindungsfehlern („not reachable“): Thomas bitten, Logseq zu öffnen und den HTTP-API-Server über den 🔌-Button zu starten.
 
-## Was nur Thomas kann
-- Tags (Klassen) anlegen oder ändern, Properties an einen Tag hängen, erlaubte Klassen einer Property setzen. Die API kann das nicht.
-- Properties anlegen kann ich, aber nur nach Thomas' Okay, weil es das Metamodell ändert. Das geht nur über Logseqs eigenen MCP (`upsertNodes`); es ergibt eine `user.property` wie in der Oberfläche. Danach hängt Thomas sie an den Tag.
+## Metamodell
+- Tags (Klassen) anlegen oder umbenennen kann nur Thomas, in der Oberfläche.
+- Alles andere am Metamodell kann ich, aber **nur nach Thomas' Okay**: `create_property` (Typ, Kardinalität, erlaubte Tags, Auswahlwerte, gleich an Tags hängen), `update_property` (umbenennen, erlaubte Tags, Auswahlwerte ergänzen), `update_tag` (Klassen-Properties, Vererbung). Erst mit `dry_run: true`, Plan zeigen, dann ausführen.
+- Typ und Kardinalität einer Property lassen sich nicht ändern, Auswahlwerte nicht entfernen; das macht Thomas in der Oberfläche.
 - Den Papierkorb leeren. `delete_nodes` legt Seiten nur in den Papierkorb; der Server blendet sie danach aus.
 
 ## Lesen

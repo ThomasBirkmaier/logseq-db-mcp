@@ -103,9 +103,10 @@ Etwa 25 Tools, in snake_case. **R** = lesend, **W** = schreibend (fällt bei `--
 | Tool | | Zweck | Phase |
 |---|---|---|---|
 | `get_schema` | R | Eigene Tags mit Vererbung und Klassen-Properties, Properties mit Typ, Kardinalität, Auswahl; optional eingebaute | 1 |
-| `create_tag` | W | **Zurückgestellt** (API-BEFUNDE, F10): Die API legt nur `plugin.class`-Tags an | – |
-| `update_tag` | W | **Zurückgestellt**, wie `create_tag`; `addTagProperty` scheitert | – |
-| `create_property` | W | Property mit Typ, Kardinalität, Auswahlwerten, über `upsertNodes` als `user.property` | 3 |
+| `create_tag` | W | **Nicht möglich** (API-BEFUNDE F10): Die API legt nur `plugin.class`-Tags an; Tags legt man in der Oberfläche an | – |
+| `update_tag` | W | Klassen-Properties und Vererbung; über `:logseq.property.class/properties` direkt (I16), weil `addTagProperty` scheitert | 3, erledigt (0.3.0) |
+| `create_property` | W | Property mit Typ, Kardinalität, erlaubten Tags, Auswahlwerten, über `upsertNodes` als `user.property` | 3, erledigt (0.3.0) |
+| `update_property` | W | Umbenennen (I20), erlaubte Tags (I17), Auswahlwerte ergänzen | 3, erledigt (0.3.0) |
 | `update_property` | W | Name, erlaubte Klassen, Auswahlwerte ändern. Typwechsel nur mit `force` | 3 |
 
 ### Objekte (Knoten mit Tag)
@@ -228,7 +229,7 @@ logseq-db-mcp/
 | **0 Spike** | Offene Punkte gegen den Testgraphen SpikeTest klären | erledigt, `docs/API-BEFUNDE.md` |
 | **1 Lesen** | Gerüst, Client, Schema-Cache, Graph; Tools `get_schema`, `resolve`, `get_node`, `find_objects`, `get_backlinks`, `get_journal`, `search`, `query`, `call_api` | **erledigt** |
 | **2 Schreiben** | Werte, Read-back, Zugriffsregeln; `create_page`, `insert_blocks`, `update_block`, `move_blocks`, `rename_page`, `delete_nodes`, `create_objects`, `update_objects`, `tag_nodes`, `untag_nodes`, `add_to_journal` | **erledigt**; ersetzt den Fork in Claude Desktop |
-| **3 Schema und Prüfung** | `validate_objects` und Verweise per ID | **erledigt** (0.2.0); `create_property` zurückgestellt (erlaubte Klassen nicht setzbar, API-BEFUNDE I11); HTTP-Transport, `import_markdown` offen |
+| **3 Schema und Prüfung** | `validate_objects`, Verweise per ID, Schema-Tools | **erledigt**: `validate_objects` und Verweise per ID (0.2.0), `create_property`, `update_property`, `update_tag` (0.3.0); HTTP-Transport, `import_markdown` offen |
 
 ## 8. Offene Punkte und Risiken
 
