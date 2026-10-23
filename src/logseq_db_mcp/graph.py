@@ -175,10 +175,22 @@ class Graph:
             uuids |= refs.uuids_in(n.get("title"))
         known = {n["id"]: n for n in all_nodes}
         ents = {**known, **self.pull_ids(ref_ids - set(known))}
+        # references stored as text value blocks holding a UUID (API-BEFUNDE I10)
+        for n in all_nodes:
+            for key, raw in n.items():
+                p = schema.properties.get(key)
+                if p is not None:
+                    for i in values.referenced_ids(raw):
+                        target = values.text_ref_uuid(p, ents.get(i, {}))
+                        if target:
+                            uuids.add(target)
         titles = {e["uuid"]: e.get("title") for e in ents.values() if "uuid" in e}
         missing = uuids - set(titles)
+        by_uuid = {e["uuid"]: e for e in ents.values() if "uuid" in e}
         if missing:
-            titles.update({u: e.get("title") for u, e in self.pull_uuids(missing).items()})
+            pulled = self.pull_uuids(missing)
+            by_uuid.update(pulled)
+            titles.update({u: e.get("title") for u, e in pulled.items()})
 
         hide = self.tag_ids_for_names(self.settings.hide_tags) if self.settings.hide_tags else set()
 
@@ -206,7 +218,7 @@ class Graph:
                 p = schema.properties.get(key)
                 if p is None or not p.shown:
                     continue
-                value = values.decode(p, raw, ents)
+                value = values.decode(p, raw, ents, by_uuid)
                 props[p.title] = {"ident": p.ident, "value": value} if include_idents else value
             if props:
                 out["properties"] = props

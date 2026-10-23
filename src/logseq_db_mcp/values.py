@@ -43,21 +43,37 @@ def day_to_iso(day: int) -> str:
     return f"{s[:4]}-{s[4:6]}-{s[6:8]}"
 
 
-def decode(prop: Property, raw: Any, entities: dict[int, dict]) -> Any:
-    """Raw pull value → JSON. ``entities`` holds the referenced entities by id."""
+def decode(prop: Property, raw: Any, entities: dict[int, dict], by_uuid: dict[str, dict] | None = None) -> Any:
+    """Raw pull value → JSON. ``entities`` holds the referenced entities by id,
+    ``by_uuid`` the targets of references stored as text (``text_ref_uuids``)."""
     items = raw if isinstance(raw, list) else [raw]
-    out = [_decode_one(prop, x, entities) for x in items if x is not None]
+    out = [_decode_one(prop, x, entities, by_uuid or {}) for x in items if x is not None]
     if prop.many:
         return out
     return out[0] if out else None
 
 
-def _decode_one(prop: Property, x: Any, entities: dict[int, dict]) -> Any:
+def text_ref_uuid(prop: Property, value_block: dict) -> str | None:
+    """A reference property whose value is a *text* value block holding a UUID.
+
+    Logseq accepts that when a UUID string is written without ``entityId``
+    (API-BEFUNDE I10); the graph then has text, not a reference.
+    """
+    if prop.type not in REF_TYPES or VALUE_BLOCK not in value_block:
+        return None
+    title = value_block.get("title")
+    return title if isinstance(title, str) and UUID_RE.match(title) else None
+
+
+def _decode_one(prop: Property, x: Any, entities: dict[int, dict], by_uuid: dict[str, dict]) -> Any:
     if isinstance(x, dict) and "id" in x:
         e = entities.get(x["id"])
         if e is None:
             return {"id": x["id"]}
         if VALUE_BLOCK in e:
+            target = text_ref_uuid(prop, e)
+            if target:
+                return {"uuid": target, "title": (by_uuid.get(target) or {}).get("title"), "stored_as_text": True}
             return e.get(":logseq.property/value", e.get("title"))
         if x["id"] in prop.choices:
             return prop.choices[x["id"]]

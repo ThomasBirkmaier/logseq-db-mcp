@@ -103,3 +103,12 @@ def test_decode():
     assert values.decode(prop("node", many=True), [{"id": 10}], ents) == [{"uuid": TARGET["uuid"], "title": "Ziel"}]
     assert values.decode(prop(many=True), None, ents) == []
     assert values.decode(prop("node"), {"id": 99}, ents) == {"id": 99}
+
+
+def test_decode_reference_stored_as_text():
+    """ReqSeq: node properties whose value is a text value block holding the target's UUID."""
+    vb = {"id": 60, ":logseq.property/created-from-property": {"id": 1}, "title": TARGET["uuid"]}
+    got = values.decode(prop("node"), {"id": 60}, {60: vb}, {TARGET["uuid"]: TARGET})
+    assert got == {"uuid": TARGET["uuid"], "title": "Ziel", "stored_as_text": True}
+    # a text property keeps the UUID as plain text
+    assert values.decode(prop("default"), {"id": 60}, {60: vb}) == TARGET["uuid"]
