@@ -17,7 +17,6 @@ Gilt für jede Arbeit an Thomas' Requirements-Spec im Logseq-DB-Graph **ReqSeq**
 - Tags (Klassen) anlegen oder umbenennen kann nur Thomas, in der Oberfläche.
 - Alles andere am Metamodell kann ich, aber **nur nach Thomas' Okay**: `create_property` (Typ, Kardinalität, erlaubte Tags, Auswahlwerte, gleich an Tags hängen), `update_property` (umbenennen, erlaubte Tags, Auswahlwerte ergänzen), `update_tag` (Klassen-Properties, Vererbung). Erst mit `dry_run: true`, Plan zeigen, dann ausführen.
 - Typ und Kardinalität einer Property lassen sich nicht ändern, Auswahlwerte nicht entfernen; das macht Thomas in der Oberfläche.
-- Den Papierkorb leeren. `delete_nodes` legt Seiten nur in den Papierkorb; der Server blendet sie danach aus.
 
 ## Lesen
 - Elemente einer Klasse: `find_objects` (mit Unterklassen; Filter per `where`, z. B. Requirement Status = Draft). Einzelner Knoten: `get_node`. Titel → UUID: `resolve`.
@@ -37,6 +36,7 @@ Gilt für jede Arbeit an Thomas' Requirements-Spec im Logseq-DB-Graph **ReqSeq**
 ## Prüfen und Löschen
 - `validate_objects` nach jeder größeren Änderung. Leer bleiben dürfen (`optional`): bei Decision Supersedes; bei Glossary Term alles außer Bereich.
 - Eigene, gerade erzeugte Fehler darf ich sofort entfernen (`delete_nodes` mit `confirm: true`).
+- `delete_nodes` legt Seiten nur in den Papierkorb; der Server blendet sie danach aus. Den Papierkorb leert nur Thomas.
 - Inhaltliche Löschungen und Umstrukturierungen erst vorschlagen und nach Thomas' Okay ausführen. Requirements werden nicht gelöscht, sondern auf Obsolete gesetzt.
 - Vor größeren Umbauten den Graph-Ordner `~/logseq/graphs/ReqSeq` nach `~/logseq/backups-manuell/` kopieren (nicht unter `~/logseq/graphs/`, sonst sieht Logseq die Kopie als Graph).
 
