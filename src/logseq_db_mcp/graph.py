@@ -17,6 +17,8 @@ from .settings import Settings
 logger = logging.getLogger("logseq-db-mcp")
 
 CLOSED_VALUE = "closed-value-property"
+# deletePage only moves a page to the recycle bin (API-BEFUNDE I13)
+DELETED_AT = ":logseq.property/deleted-at"
 
 
 def is_value_block(e: dict) -> bool:
@@ -150,8 +152,13 @@ class Graph:
 
     # --- JSON form ----------------------------------------------------------
 
-    def serialize(self, nodes: list[dict], depth: int = 0, include_idents: bool = False) -> list[dict]:
-        """Nodes → compact JSON, with ``depth`` levels of outline children."""
+    def serialize(self, nodes: list[dict], depth: int = 0, include_idents: bool = False,
+                  include_recycled: bool = False) -> list[dict]:
+        """Nodes → compact JSON, with ``depth`` levels of outline children.
+
+        Pages in the recycle bin and blocks on them are left out, unless
+        ``include_recycled`` (a node asked for by UUID); they are then marked.
+        """
         schema = self.schema.get()
         trees: dict[int, dict[int, list[dict]]] = {}
         if depth > 0:
@@ -199,9 +206,14 @@ class Graph:
             page_tags = self.tag_ids(ents.get(n["page"]["id"], {})) if "page" in n else set()
             if hide and (self.tag_ids(n) | page_tags) & hide:
                 return None
+            recycled = DELETED_AT in n or ("page" in n and DELETED_AT in ents.get(n["page"]["id"], {}))
+            if recycled and not include_recycled:
+                return None
             kind = self.kind(n)
             out: dict[str, Any] = {"uuid": n.get("uuid"), "kind": kind,
                                    "title": refs.render(n.get("title"), titles)}
+            if recycled:
+                out["recycled"] = True
             if kind == "journal":
                 out["date"] = values.day_to_iso(n["journal-day"])
             if "page" in n:

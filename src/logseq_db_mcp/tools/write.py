@@ -5,6 +5,7 @@ from __future__ import annotations
 import datetime as dt
 from typing import Any
 
+from ..graph import DELETED_AT
 from ..values import InvalidValue
 from ..writer import POSITIONS, Writer, outline_ancestors
 from .base import UUID_SCHEMA, Context, Tool
@@ -40,6 +41,11 @@ def _schema(props: dict, required: list[str], blocks: bool = False) -> dict:
     return s
 
 
+def _exists(title: str, e: dict) -> InvalidValue:
+    where = " in Logseq's recycle bin; restore or delete it there first" if DELETED_AT in e else ""
+    return InvalidValue(f"'{title}' already exists ({e['uuid']}){where}; titles are unique across pages, tags and properties")
+
+
 def _plan(blocks) -> list[dict]:
     return [{"title": b.title, "tags": [t.title for t in b.tags],
              "properties": {p.title: (e.expected if e else None) for p, e in b.props},
@@ -62,7 +68,7 @@ class CreatePage(Tool):
         title = args["title"].strip()
         existing = ctx.graph.entities_by_title(title)
         if existing:
-            raise InvalidValue(f"'{title}' already exists ({existing[0]['uuid']}); titles are unique across pages, tags and properties")
+            raise _exists(title, existing[0])
         tags = w.tags(args.get("tags"))
         props = w.props(args.get("properties"))
         blocks = [w.block(b) for b in args.get("blocks") or []]
@@ -219,7 +225,7 @@ class RenamePage(Tool):
         new = args["title"].strip()
         clash = [x for x in ctx.graph.entities_by_title(new) if x["id"] != e["id"]]
         if clash:
-            raise InvalidValue(f"'{new}' already exists ({clash[0]['uuid']})")
+            raise _exists(new, clash[0])
         if w.dry_run:
             return {"dry_run": True, "uuid": e["uuid"], "old": e.get("title"), "new": new}
         w._call(f"rename {e['uuid']}", "logseq.Editor.renamePage", e["uuid"], new)
@@ -232,8 +238,9 @@ class DeleteNodes(Tool):
     writes = True
     destructive = True
     description = (
-        "Delete blocks (with their children) or pages. Without confirm: true it only reports what would be "
-        "lost (children, backlinks). Tags and properties are not deleted here.")
+        "Delete blocks (with their children) or pages. Pages go to Logseq's recycle bin (restorable there, "
+        "hidden from all other tools); blocks are removed. Without confirm: true it only reports what would "
+        "be lost (children, backlinks). Tags and properties are not deleted here.")
     input_schema = {"type": "object", "properties": {
         "uuids": {"type": "array", "minItems": 1, "items": UUID_SCHEMA},
         "confirm": {"type": "boolean", "default": False}},
@@ -265,7 +272,7 @@ class DeleteNodes(Tool):
                 w.problems.append(f"{e['uuid']} still exists")
             elif "page" not in e:
                 gone = g.entity_by_uuid(e["uuid"])
-                if gone is not None and not any(k.endswith("deleted-at") for k in gone):
+                if gone is not None and DELETED_AT not in gone:
                     w.problems.append(f"page {e['uuid']} still exists")
         return w.result(deleted=report, changed=[e["uuid"] for e in nodes])
 
@@ -300,8 +307,9 @@ class CreateObjects(Tool):
             given = {p.ident for p, _ in block.props}
             missing = sorted({p.title for t in tags for p in schema.class_properties(t.id) if p.ident not in given})
             if spec.get("as_page"):
-                if ctx.graph.entities_by_title(spec["title"]):
-                    raise InvalidValue(f"'{spec['title']}' already exists")
+                existing = ctx.graph.entities_by_title(spec["title"])
+                if existing:
+                    raise _exists(spec["title"], existing[0])
                 ctx.access.check_new(spec["title"], {t.id for t in tags})
                 target = None
             else:
@@ -359,7 +367,7 @@ class UpdateObjects(Tool):
                 if "page" not in e:
                     clash = [x for x in ctx.graph.entities_by_title(title) if x["id"] != e["id"]]
                     if clash:
-                        raise InvalidValue(f"'{title}' already exists ({clash[0]['uuid']})")
+                        raise _exists(title, clash[0])
                 else:
                     w.check_links(title)
             plans.append((e, title, w.props(u.get("properties"))))

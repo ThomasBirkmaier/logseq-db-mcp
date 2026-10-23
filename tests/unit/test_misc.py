@@ -66,3 +66,26 @@ def test_call_api_rejects(method):
 def test_call_api_allows():
     validate_method("logseq.Editor.getBlock")
     validate_method("logseq.DB.datascriptQuery")
+
+
+def test_recycled_pages_are_hidden_from_lists_but_marked_by_uuid():
+    from logseq_db_mcp.graph import DELETED_AT, Graph
+    from logseq_db_mcp.schema import Schema, Tag
+
+    from .conftest import FakeClient, settings
+
+    page_class = Tag(id=4, uuid="p", ident=":logseq.class/Page", title="Page", builtin=True)
+
+    class Cache:
+        def get(self):
+            return Schema([], [page_class])
+
+    g = Graph(FakeClient(lambda m, a: []), Cache(), settings())
+    live = {"id": 1, "uuid": U, "title": "Seite", "tags": [{"id": 4}]}
+    gone = {"id": 2, "uuid": "22222222-2222-4222-8222-222222222222", "title": "Weg", "tags": [{"id": 4}],
+            DELETED_AT: 1792776640041}
+    block_on_gone = {"id": 3, "uuid": "33333333-3333-4333-8333-333333333333", "title": "b",
+                     "page": {"id": 2}, "parent": {"id": 2}}
+    assert [n["uuid"] for n in g.serialize([live, gone, block_on_gone])] == [U]
+    marked = g.serialize([gone], include_recycled=True)
+    assert marked[0]["recycled"] is True

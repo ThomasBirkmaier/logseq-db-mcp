@@ -231,3 +231,16 @@ def test_access_rules(settings, model):
     ro = Runner(make_settings())
     ro.tools = {k: v for k, v in ro.tools.items() if not v.writes}
     assert "Unknown tool" in ro.error("create_page", title="x")
+
+
+def test_deleted_pages_go_to_recycle_bin_and_disappear(tool, model):
+    p = model["p"]
+    page = tool("create_objects", objects=[{"tags": [f"{p} Andere"], "title": f"{p} Papierkorb", "as_page": True,
+                                            "properties": {f"{p} ref": model["target"]}}])["objects"][0]["uuid"]
+    assert any(b["uuid"] == page for b in tool("get_backlinks", uuid=model["target"])["backlinks"])
+    assert tool("delete_nodes", uuids=[page], confirm=True)["verified"]
+    assert all(o["uuid"] != page for o in tool("find_objects", tag=f"{p} Andere")["objects"])
+    assert all(b["uuid"] != page for b in tool("get_backlinks", uuid=model["target"])["backlinks"])
+    assert tool("resolve", title=f"{p} Papierkorb")["matches"] == []
+    assert tool("get_node", uuid=page, depth=0)["recycled"] is True
+    assert "recycle bin" in tool.error("create_page", title=f"{p} Papierkorb")

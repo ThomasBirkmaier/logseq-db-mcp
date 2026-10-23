@@ -107,7 +107,8 @@ class GetNode(Tool):
     def run(self, ctx: Context, args: dict) -> Any:
         e = ctx.graph.require(args["uuid"])
         ctx.access.check_read(e)
-        out = ctx.graph.serialize([e], depth=args.get("depth", 2), include_idents=args.get("include_idents", False))
+        out = ctx.graph.serialize([e], depth=args.get("depth", 2), include_idents=args.get("include_idents", False),
+                                  include_recycled=True)
         return out[0] if out else None
 
 
