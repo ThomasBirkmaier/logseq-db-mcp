@@ -199,6 +199,17 @@ class SchemaCache:
     def invalidate(self) -> None:
         self._schema = None
 
+    def covering(self, entities) -> Schema:
+        """The schema, reloaded once if an entity carries a property it does not know yet
+        (created in the UI or by another client since the last load)."""
+        schema = self.get()
+        for e in entities:
+            for key in e:
+                if key.startswith((":user.property/", ":plugin.property.")) and key not in schema.properties:
+                    self.invalidate()
+                    return self.get()
+        return schema
+
     def property(self, key: str) -> Property:
         try:
             return self.get().property(key)

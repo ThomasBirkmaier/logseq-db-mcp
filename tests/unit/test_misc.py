@@ -81,6 +81,9 @@ def test_recycled_pages_are_hidden_from_lists_but_marked_by_uuid():
         def get(self):
             return Schema([], [page_class])
 
+        def covering(self, entities):
+            return self.get()
+
     g = Graph(FakeClient(lambda m, a: []), Cache(), settings())
     live = {"id": 1, "uuid": U, "title": "Seite", "tags": [{"id": 4}]}
     gone = {"id": 2, "uuid": "22222222-2222-4222-8222-222222222222", "title": "Weg", "tags": [{"id": 4}],
@@ -90,3 +93,25 @@ def test_recycled_pages_are_hidden_from_lists_but_marked_by_uuid():
     assert [n["uuid"] for n in g.serialize([live, gone, block_on_gone])] == [U]
     marked = g.serialize([gone], include_recycled=True)
     assert marked[0]["recycled"] is True
+
+
+def test_schema_reloads_for_unknown_property():
+    from logseq_db_mcp.schema import PROPERTIES_Q, SchemaCache
+
+    from .conftest import FakeClient
+
+    loads = []
+    prop = {"id": 9, "uuid": "u9", "ident": ":user.property/Neu-abc", "title": "Neu", ":logseq.property/type": "default"}
+
+    def respond(method, args):
+        if args and args[0] == PROPERTIES_Q:
+            loads.append(1)
+            return [[prop]] if len(loads) > 1 else []  # created after the first load
+        return []
+
+    cache = SchemaCache(FakeClient(respond))
+    assert ":user.property/Neu-abc" not in cache.get().properties
+    assert cache.covering([{"id": 1, ":user.property/Neu-abc": {"id": 5}}]).properties[":user.property/Neu-abc"].title == "Neu"
+    assert len(loads) == 2
+    cache.covering([{"id": 1, ":user.property/Neu-abc": {"id": 5}}])
+    assert len(loads) == 2  # known now: no further reload

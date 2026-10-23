@@ -191,7 +191,7 @@ class Graph:
         Pages in the recycle bin and blocks on them are left out, unless
         ``include_recycled`` (a node asked for by UUID); they are then marked.
         """
-        schema = self.schema.get()
+        schema = self.schema.covering(nodes)
         trees: dict[int, dict[int, list[dict]]] = {}
         if depth > 0:
             for n in nodes:

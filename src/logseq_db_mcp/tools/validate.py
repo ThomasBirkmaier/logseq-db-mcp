@@ -51,6 +51,7 @@ class ValidateObjects(Tool):
         rows = ctx.client.q("[:find ?b :in $ [?t ...] :where [?b :block/tags ?t]]", edn_ints(tag_ids))
         objects = [o for o in g.pull_ids(r[0] for r in rows).values()
                    if DELETED_AT not in o and not g.hidden(o)]
+        schema = ctx.schema.covering(objects)
 
         # everything the objects' property values point to, in one go
         ref_ids = {i for o in objects for k, raw in o.items() if k in schema.properties

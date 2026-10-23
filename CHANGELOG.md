@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.2.1] - 2026-10-23
+
+### Fixed
+
+- Der Schema-Cache lädt sich neu, sobald ein Knoten eine Property trägt, die er noch nicht kennt. Vorher blieben Properties, die nach dem Start angelegt wurden (in der Oberfläche oder über einen anderen Client), unsichtbar, bis `get_schema` aufgerufen wurde; auch `validate_objects` übersah sie. Bemerkt beim Glossar-Schema in ReqSeq
+
 ## [0.2.0] - 2026-10-23
 
 ### Added
